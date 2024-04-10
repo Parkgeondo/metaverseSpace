@@ -10,11 +10,10 @@ const { Server } = require("socket.io");
 const io = new Server(server);
 
 let sessions = [];
-
 // 소켓 서버 열기 - 포트 8080
 const PORT = process.env.PORT || 8080;
 server.listen(PORT, () => {
-  console.log("Server is running on port " + PORT);
+  console.log("Server is running on port " + PORT, process.env.PORT);
 });
 
 app.use(express.static(path.join(__dirname, "public")));
