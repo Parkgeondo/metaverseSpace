@@ -30,8 +30,8 @@
 
       <!-- 화면 아랫쪽 빨간색 버튼 => 측정 시작을 누르면 전체 캐릭터의 위치측정을 시작한다. 측정끝을 누르면 캐릭터가 걸어온 루트를 모두 파이어 베이스 서버에 올려놓는다. -->
       <!-- 파이어베이스 주소 https://console.firebase.google.com/project/metaverseanalysis-2ef87/firestore/data/~2Fpost~2FTest?hl=ko -->
-        <button class="start_onlyServer">측정시작(서버)</button>
-        <button class="end_onlyServer">측정끝(서버)</button>
+        <!-- <button class="start_onlyServer">측정시작(서버)</button>
+        <button class="end_onlyServer">측정끝(서버)</button> -->
       </div>
 
       <!-- 화면 오른쪽 위의 UI, 캐릭터 루트 파일을 저장해 놓은게 있다면 불러올 수 있고, 카메라 선택 부분에서는 카메라의 위치를 조절할 수 있다.-->
@@ -381,7 +381,7 @@
     // 현재는 박건도의 컴퓨터를 이용해서 서버를 구동하지만, 프로젝트가 타인에게 넘어갈 경우 위 링크를 참고하여 새로운 ip에서 서버를 실행시켜야함.
 
     // data는 각 서버에 담을 공동적인 데이터들임.
-    let socket = io("http://metaversanalysis3:8080");
+    let socket = io("http://localhost:8080/");
     // let socket = io("http://211.248.120.68:9876/");
     let data = {
       id: null,
