@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/c-frame/aframe-physics-system@v4.2.2/dist/aframe-physics-system.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/c-frame/aframe-extras@fb96ab2/dist/aframe-extras.js"></script>
+    <script src="https://recast-api.donmccurdy.com/aframe-inspector-plugin-recast.js"></script>
+    <script
+      src="https://code.jquery.com/jquery-3.7.0.min.js"
+      integrity="sha256-2Pmvv0kuTBOenSvLm6bvfBSSHrUJ+3A7x6P5Ebd07/g="
+      crossorigin="anonymous"
+    ></script>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <a-scene id="first" renderer="gammaOutput: true">
+
+      <!-- 화면 왼쪽 미니맵 -->
+      <div class="miniMap">
+        <div class="cha"></div>
+        <div class="cha2"></div>
+        <div class="map"></div>
+      </div>
+
+      <!-- 화면 아랫쪽 파란색 버튼 => 측정 시작을 누르면 현재 캐릭터의 위치측정을 시작한다. 측정끝을 누르면 캐릭터가 걸어온 루트를 빨간색 도형과 선으로 시각화한다. -->
+      <div class="btnUI">
+        <!-- <button class="start">측정시작</button>
+        <button class="end">측정끝</button> -->
+
+      <!-- 화면 아랫쪽 빨간색 버튼 => 측정 시작을 누르면 전체 캐릭터의 위치측정을 시작한다. 측정끝을 누르면 캐릭터가 걸어온 루트를 모두 파이어 베이스 서버에 올려놓는다. -->
+      <!-- 파이어베이스 주소 https://console.firebase.google.com/project/metaverseanalysis-2ef87/firestore/data/~2Fpost~2FTest?hl=ko -->
+        <button class="start_onlyServer">측정시작(서버)</button>
+        <button class="end_onlyServer">측정끝(서버)</button>
+      </div>
+
+      <!-- 화면 오른쪽 위의 UI, 캐릭터 루트 파일을 저장해 놓은게 있다면 불러올 수 있고, 카메라 선택 부분에서는 카메라의 위치를 조절할 수 있다.-->
+      <div class="sysUI">
+        <div class="container file_select">
+          <input type="file" id="input_file" />
+          <button onclick="read(event)">가져오기</button>
+        </div>
+
+        <div class="container camera_select">
+          <div class="camera_select_title">카메라 선택</div>
+          <div class="camera_button">
+            <button class="change" onclick="change1()">TOP VIEW</button>
+            <button class="change active" onclick="change2()">NORMAL VIEW</button>
+          </div>
+        </div>
+      </div>
+
+
+      <!-- 이벤트 오브젝트 ex)포스터를 누르면 나타나는 모달창 -->
+      <div class="modalcontainer hidden">
+        <div class="modal">
+          <div class="close">X</div>
+          <div class="info_container">
+            <div class="fishthumb"></div>
+            <div class="fishinfo">
+              <div class="textContainer">
+                <div class="name">asd</div>
+                <div class="fishdetail">asd</div>
+              </div>
+              <div class="btn">
+                <button class="add btnsm">사이트 방문하기</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="cover"></div>
+      </div>
+
+
+      <!-- 에셋 모음 -->
+      <a-asset>
+        <!-- 캐릭터 모델링 본인 -->
+        <img id="play" src="./play.png">
+        <img id="pause" src="./pause.png">
+        </img>
+        <a-asset-item
+          id="character"
+          src="./glb/human.glb"
+        ></a-asset-item>
+
+        <!-- 캐릭터 모델링 타인 -->
+        <a-asset-item
+          id="character_other"
+          src="./glb/human.glb"
+        ></a-asset-item>
+
+        <!-- NPC 모델링 -->
+        <a-asset-item id="npc" src="./glb/human2.glb"></a-asset-item>
+
+        <!-- Map 모델링 -->
+        <!-- <a-asset-item
+          id="map"
+          src="https://cdn.glitch.me/6fa6aec4-5e4b-465e-ae5e-092f559a7f71/metaverse.glb?v=1688481055830"
+        ></a-asset-item> -->w
+        <a-asset-item
+          id="map"
+          src="./glb/metabus0403.glb"
+        ></a-asset-item>
+
+        <!-- Map nav-mesh 모델링 / nav-mesh -> 캐릭터가 지나갈 곳 지나가지 못할곳을 표시하는 모델링, 보이지 않도록 투명한 상태. -->
+        <a-asset-item
+          id="nav-mesh"
+          src="./glb/nav_mesh.glb"
+        ></a-asset-item>
+        <!-- <a-asset-item
+          id="nav-mesh"
+          src="https://cdn.glitch.global/6fa6aec4-5e4b-465e-ae5e-092f559a7f71/nav.glb?v=1688481354605"
+        ></a-asset-item> -->
+
+        <img id="sky" src="image/sky.jpg">
+
+        <video id="apr" loop="true" src="./video/뷰티, 바이오 의료기기로 IPO 기대감 상승중인 '에이피알(APR)' 바이오 시장에 미칠 영향은_ [바이오 기업 수업].mp4"></video>
+        <video id="kcc" loop="true" src="./video/[KCCBOOK] 2020, 실리콘의 변신 _ SILICONE OF KCC.mp4"></video>
+        <video id="auto" loop="true" src="./video/차량 소프트웨어 플랫폼 mobilegene 브랜드 소개 (AUTOSAR).mp4"></video>
+        <video id="inbody" loop="true" src="./video/2024 키메스, 인바디 부스 스케치.mp4"></video>
+        <video id="basf" loop="true" src="./video/BASF. Klimat się zmienia.Tak, jak my. Upcycling..mp4"></video>
+        <video id="plateer" loop="true" src="./video/[The Futuristic PLATEER 2024] 행사 스케치.mp4"></video>
+
+        <video id="tuk" loop="true" src="./video/intro.mp4"></video>
+
+      </a-asset>
+        <!-- <a-asset-item
+          id="nav-mesh"
+          src="https://cdn.glitch.global/14d45551-f70c-49e3-8356-a98a04d38886/metabus3_nav.glb?v=1702482914290"
+        ></a-asset-item>
+      </a-asset> -->
+
+      <!-- 
+          id="rig" -> 캐릭터가 움직이는 부분을 담당하는 부분
+          movement-controls -> 캐릭터가 움직이는 부분, nav-mesh이상으로 나갈수 없음
+          look-controls -> 마우스로 화면을 돌릴 수 있는 부분
+          rotation-reader -> 캐릭터 상하 회전 보정하는 함수
+        -->
+      <a-entity
+        id="rig"
+        movement-controls="constrainToNavMesh: true; speed:1.0"
+        look-controls
+        rotation-reader
+        position = '0 19.6 80'
+      >
+      <!-- 
+          id="player" -> 실질적인 캐릭터의 모습이 담기는 부분
+          gltf-model -> 캐릭터 모델링
+          animation-mixer -> 애니메이션을 재생하는 부분
+          position -> 위치
+          rotation -> 회전
+          scale -> 크기
+        -->
+        <a-entity
+          id="player"
+          gltf-model="#character"
+          animation-mixer="clip: Default;"
+          position="0 0 0"
+          rotation="0 0 0"
+          scale="2.0 2.0 2.0"
+        ></a-entity>
+
+        <!-- 
+          카메라
+          geometry -> 커서 보이지 않게 조정
+          cursor -> 원래는 화면의 정중앙만 클릭할 수 있지만, 마우스로 클릭할 수 있도록 설정
+          raycaster -> 
+        -->
+        <a-entity camera id="camera" rotation="0 0 0" position="0 8 16">
+          <a-cursor
+            geometry="primitive: ring; radiusInner: 0; radiusOuter: 0"
+            cursor="rayOrigin: mouse;"
+            raycaster=" objects : .clickable; far : 1000;"
+          ></a-cursor>
+        </a-entity>
+      </a-entity>
+
+      <!-- 조명 -->
+
+      <a-entity
+        class="navmesh"
+        nav-mesh
+        gltf-model="#nav-mesh"
+        scale="1.4 1.4 1.4"
+        position="0 -1 0"
+        visible="false"
+      ></a-entity>
+
+      <a-entity
+        class="map"
+        gltf-model="#map"
+        scale="1.4 1.4 1.4"
+        position="0 -1 0"
+        visible="true"
+        rotation="0 0 0"
+      ></a-entity>
+
+      <!-- 두번째 카메라 -->
+      <a-entity id="cameraRig" position="0 0 0" follow-camera="target: #player">
+        <a-entity id="second-camera" camera></a-entity>
+      </a-entity>
+
+      <!-- 이동경로(빨간색 원과 선)을 이 안에 저장 -->
+      <a-entity id="positionMap" position="0 0 0"></a-entity>
+
+      <a-sky src="#sky" scale="10 10 10"></a-sky>
+
+      <!-- 클릭하는 포스터 부분 -->
+      <a-box class="clickable" data-index="0" scale = "1 10 6" position="-42 7.6 -27.2" change material="transparent: true; opacity: 0;"></a-box>
+      
+      <a-box class="clickable" data-index="1" scale = "1 10 6" position="-42 7.6 -63.6" change material="transparent: true; opacity: 0;"></a-box>
+
+      <a-box class="clickable" data-index="2" scale = "1 10 6" rotation="0 90 0" position="-26 7.6 -104" change material="transparent: true; opacity: 0;"></a-box>
+
+      <a-box class="clickable" data-index="3" scale = "1 10 6" rotation="0 90 0" position="25 7.6 -104" change material="transparent: true; opacity: 0;"></a-box>
+
+      <a-box class="clickable" data-index="4" scale = "1 10 6" position="42 6.7 -43.5" change material="transparent: true; opacity: 0;"></a-box>
+
+      <a-box class="clickable" data-index="5" scale = "1 10 6" position="42 6.7 -6.36" change material="transparent: true; opacity: 0;"></a-box>
+
+      
+      <a-video src="#apr" width="11.3" height="6.0" position="-43 6.2 -8.1" rotation="0 90 0">
+        <a-image class="clickable" src="#play" position="0 -4.5 0.4" play-pause scale = "3 3 3"></a-image>
+      </a-video>
+      <a-video src="#kcc" width="11.3" height="6.0" position="-43 6.2 -44.5" rotation="0 90 0">
+        <a-image class="clickable" src="#play" position="0 -4.5 0.4" play-pause scale = "3 3 3"></a-image>
+      </a-video>
+      <a-video src="#auto" width="11.3" height="6.0" position="-43 6.2 -80.2" rotation="0 90 0">
+        <a-image class="clickable" src="#play" position="0 -4.5 0.4" play-pause scale = "3 3 3"></a-image>
+      </a-video>
+
+      <a-video src="#inbody" width="11.3" height="6.0" position="41.6 6.2 -25.8" rotation="0 -90 0">
+        <a-image class="clickable" src="#play" position="0 -4.5 0.4" play-pause scale = "3 3 3"></a-image>
+      </a-video>
+      <a-video src="#basf" width="11.3" height="6.0" position="41.6 6.2 -62.5" rotation="0 -90 0">
+        <a-image class="clickable" src="#play" position="0 -4.5 0.4" play-pause scale = "3 3 3"></a-image>
+      </a-video>
+      <a-video id="videoControls" src="#plateer" width="11.3" height="6.0" position="42.6 6.2 -80.4" rotation="0 -90 0">
+        <a-image class="clickable" src="#play" position="0 -4.5 0.4" play-pause scale = "3 3 3"></a-image>
+      </a-video>
+
+
+      <a-video src="#tuk" width="64" height="36" position="0 30 -220" rotation="0 0 0">
+        <a-image class="clickable" src="#play" position="0 -20 0.4" play-pause scale = "3 3 3"></a-image>
+      </a-video>
+
+
+    </a-scene>
+  </body>
+  <script>
+
+    // 활성화 카메라 변환
+    const firstCameraEl = document.querySelector("#camera");
+    const secondCameraEl = document.querySelector("#second-camera");
+    const cameraRig = document.querySelector("#cameraRig");
+
+    const change = document.querySelectorAll(".change");
+
+    function change1() {
+      //카메라1번 조작할 수 없도록 만듬
+      secondCameraEl.setAttribute("look-controls", { enabled: false });
+
+      //카메라 첫번째꺼 끄고 두번째 카메라 활성화
+      firstCameraEl.setAttribute("camera", "active", false);
+      secondCameraEl.setAttribute("camera", "active", true);
+
+      //카메라가 원점을 볼 수 있도록 회전
+      cameraRig.object3D.position.set(0, 20, 8);
+      cameraRig.object3D.rotation.set(18, 0, 0);
+      secondCameraEl.object3D.rotation.set(0, 0, 0);
+
+      change[0].classList.add('active');
+      change[1].classList.remove('active');
+    }
+
+    function change2() {
+      firstCameraEl.setAttribute("camera", "active", true);
+      secondCameraEl.setAttribute("camera", "active", false);
+      change[0].classList.remove('active');
+      change[1].classList.add('active');
+    }
+
+    let player = document.querySelector("#player");
+    let camera = document.querySelector("#camera");
+    let rig = document.querySelector("#rig");
+
+    AFRAME.registerComponent("follow-camera", {
+      schema: {
+        target: {type: "selector"}
+      },
+      tick:  function(){
+        const positiondata = rig.getAttribute("position")
+        const positiondata2 = {...positiondata}
+        positiondata2.y = positiondata2.y + 40
+        positiondata2.z = positiondata2.z + 20
+        this.el.object3D.position.lerp(positiondata2, 1)
+      }
+    })
+
+    AFRAME.registerComponent('play-pause', {
+      init: function(){
+        const video = this.el.parentEl;
+        const playButton = this.el;
+        const srcValue = video.getAttribute('src');
+        const video2 = document.querySelector(srcValue)
+        this.el.addEventListener('click', function(){
+          if(video2.paused){
+            video2.play();
+            playButton.setAttribute('src', '#pause')
+          }else{
+            video2.pause();
+            playButton.setAttribute('src', '#play')
+          }
+        })
+      }
+    })
+
+    AFRAME.registerComponent("rotation-reader", {
+      tick: function () {
+        const rotationx = rig.object3D.rotation.x * -1;
+        player.object3D.rotation.set(rotationx, 0, 0);
+      },
+    });
+
+    // 키값을 정의하는 함수
+    function init() {
+      keys = {
+        a: false,
+        s: false,
+        d: false,
+        w: false,
+        space: false,
+    };
+
+    // 키가 눌렸을때, 눌린키를 확인
+      document.body.addEventListener("keydown", function (e) {
+        const key = e.code.replace("Key", "").toLowerCase();
+        if (keys[key] !== undefined) {
+          if (key == "spacebar") {
+            spacebar = true;
+            keys[key] = false;
+          } else {
+            keys[key] = true;
+          }
+        }
+      });
+
+    // 키가 떼어졌을때, 땐 키를 false값으로
+      document.body.addEventListener("keyup", function (e) {
+        const key = e.code.replace("Key", "").toLowerCase();
+        if (keys[key] !== undefined) {
+          keys[key] = false;
+        }
+      });
+    }
+
+    // 키를 누르는 방향마다 애니메이션을 재생하기
+    function animate() {
+      requestAnimationFrame(animate);
+      if (keys.w) {
+        player.setAttribute("animation-mixer", "clip: walk;");
+      } else if (keys.s) {
+        player.setAttribute("animation-mixer", "clip: walk;");
+      } else if (keys.a) {
+        player.setAttribute("animation-mixer", "clip: walk;");
+      } else if (keys.d) {
+        player.setAttribute("animation-mixer", "clip: walk;");
+      } else {
+        player.setAttribute("animation-mixer", "clip: Default;");
+      }
+    }
+
+    init();
+    animate();
+  </script>
+  <script>
+
+    //https://ecolumbus.tistory.com/147
+    //https://kibbomi.tistory.com/219
+    // 위 링크를 참고하여 아파치 서버를 구동함.
+    // 현재는 박건도의 컴퓨터를 이용해서 서버를 구동하지만, 프로젝트가 타인에게 넘어갈 경우 위 링크를 참고하여 새로운 ip에서 서버를 실행시켜야함.
+
+    // data는 각 서버에 담을 공동적인 데이터들임.
+    let socket = io("http://localhost:8080/");
+    // let socket = io("http://211.248.120.68:9876/");
+    let data = {
+      id: null,
+      position: null,
+      rotation: null,
+      keys: null,
+    };
+
+    // 전체 세션 받아올 때 (타인 아바타 생성)
+    socket.on("current-sessions", function (result) {
+      for (let i in result) {
+        if (result[i] != socket.id) {
+          // 자기 자신이 아니라면
+          $("a-scene").append(
+            '<a-entity animation-mixer="clip:Default;" gltf-model="#character_other" scale = "2 2 2" id="' +
+              result[i] +
+              '" position="0 1 0"></a-entity>'
+          );
+        }
+      }
+    });
+
+    // 나간 세션 받아올 때 (타인 아바타 삭제)
+    socket.on("removed-sessions", function (result) {
+      let _target = $("#" + result)[0];
+      _target.remove();
+    });
+
+    // 나를 제외한 다른 아바타의 데이터 받아올 때
+    socket.on("server-to-client", function (result) {
+      let _id = result.id;
+      let _position = result.position;
+      let _rotation = result.rotation;
+      let _keys = result.keys;
+      let _target = $("#" + _id)[0];
+      if (_target != null) {
+        // 자기 자신은 상자가 없으므로 제외
+        _target.setAttribute("position", _position); // json 형태를 쓰려면 vanilla의 setAttribute만 작동
+        _target.setAttribute("rotation", _rotation);
+
+        if (keys.w) {
+        player.setAttribute("animation-mixer", "clip: walk;");
+      } else if (keys.s) {
+        player.setAttribute("animation-mixer", "clip: walk;");
+      } else if (keys.a) {
+        player.setAttribute("animation-mixer", "clip: walk;");
+      } else if (keys.d) {
+        player.setAttribute("animation-mixer", "clip: walk;");
+      } else if (keys.space) {
+        player.setAttribute("animation-mixer", "clip: hi;");
+      } else {
+        player.setAttribute("animation-mixer", "clip: Default;");
+      }
+        
+      }
+    });
+
+    // 50ms마다 전송
+    setInterval(function () {
+      let camera = document.querySelector("#rig"); // 카메라의 위치/회전 데이터 받아오기
+      data.id = socket.id;
+      data.position = camera.object3D.position;
+      data.rotation = {
+        // rotation만 받는 데이터가 다르므로 맞춰주기
+        x: 0,
+        y: (camera.object3D.rotation.y * 180) / Math.PI,
+        z: (camera.object3D.rotation.z * 180) / Math.PI,
+      };
+
+      document.body.addEventListener("keydown", function (e) {
+        const key = e.code.replace("Key", "").toLowerCase();
+        if (keys[key] !== undefined) {
+          if (key == "spacebar") {
+            spacebar = true;
+            keys[key] = false;
+          } else {
+            keys[key] = true;
+          }
+        }
+      });
+
+      document.body.addEventListener("keyup", function (e) {
+        const key = e.code.replace("Key", "").toLowerCase();
+        if (keys[key] !== undefined) {
+          keys[key] = false;
+        }
+      });
+
+      data.keys = keys;
+
+      socket.emit("client-to-server", data);
+    }, 50);
+
+    
+  </script>
+  <script src="./style.js"></script>
+  <script src="./modal.js"></script>
+
+  <!-- 쌩 html에서 파이어 베이스 사용할때 필요한 스크립트들 -->
+  <script src="https://www.gstatic.com/firebasejs/8.6.5/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.6.5/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.6.5/firebase-firestore.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.6.5/firebase-storage.js"></script>
+
+  <!-- 새로 추가한 스크립트 -->
+  <script src="./database.js"></script>
+</html>
