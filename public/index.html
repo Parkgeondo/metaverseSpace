@@ -381,8 +381,8 @@
     // 현재는 박건도의 컴퓨터를 이용해서 서버를 구동하지만, 프로젝트가 타인에게 넘어갈 경우 위 링크를 참고하여 새로운 ip에서 서버를 실행시켜야함.
 
     // data는 각 서버에 담을 공동적인 데이터들임.
-    let socket = io("http://localhost:8080/");
-    // let socket = io("http://211.248.120.68:9876/");
+    // let socket = io("http://localhost:8080/");
+    let socket = io("http://211.248.120.68:9876/");
     let data = {
       id: null,
       position: null,
@@ -396,7 +396,7 @@
         if (result[i] != socket.id) {
           // 자기 자신이 아니라면
           $("a-scene").append(
-            '<a-entity animation-mixer="clip:Default;" gltf-model="#character_other" scale = "2 2 2" id="' +
+            '<a-entity animation-mixer="clip:Default;" gltf-model="#character" scale = "2 2 2" id="' +
               result[i] +
               '" position="0 1 0"></a-entity>'
           );
@@ -411,7 +411,7 @@
     });
 
     // 나를 제외한 다른 아바타의 데이터 받아올 때
-    socket.on("server-to-client", function (result) {
+   socket.on("server-to-client", function (result) {
       let _id = result.id;
       let _position = result.position;
       let _rotation = result.rotation;
@@ -422,19 +422,19 @@
         _target.setAttribute("position", _position); // json 형태를 쓰려면 vanilla의 setAttribute만 작동
         _target.setAttribute("rotation", _rotation);
 
-        if (keys.w) {
-        player.setAttribute("animation-mixer", "clip: walk;");
-      } else if (keys.s) {
-        player.setAttribute("animation-mixer", "clip: walk;");
-      } else if (keys.a) {
-        player.setAttribute("animation-mixer", "clip: walk;");
-      } else if (keys.d) {
-        player.setAttribute("animation-mixer", "clip: walk;");
-      } else if (keys.space) {
-        player.setAttribute("animation-mixer", "clip: hi;");
-      } else {
-        player.setAttribute("animation-mixer", "clip: Default;");
-      }
+        if (_keys.w) {
+          _target.setAttribute("animation-mixer", "clip: walk;");
+        } else if (_keys.s) {
+          _target.setAttribute("animation-mixer", "clip: walk;");
+        } else if (_keys.a) {
+          _target.setAttribute("animation-mixer", "clip: walk;");
+        } else if (_keys.d) {
+          _target.setAttribute("animation-mixer", "clip: walk;");
+        } else if (_keys.space) {
+          _target.setAttribute("animation-mixer", "clip: twerk;");
+        } else {
+          _target.setAttribute("animation-mixer", "clip: Default;");
+        }
         
       }
     });

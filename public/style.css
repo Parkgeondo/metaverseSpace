@@ -1,13 +1,65 @@
 @font-face {
-  font-family: "Pretendard Variable";
-  font-weight: normal;
-  src: url("./font/PretendardVariable.ttf") format("truetype");
+  font-family: 'NanumSquare';
+  font-weight: 400;
+  font-style: normal;
+  src: url('./font/NanumSquareR.ttf') format('truetype');
 }
+
+@font-face {
+  font-family: 'NanumSquare';
+  font-weight: 300;
+  font-style: normal;
+  src: url('./font/NanumSquareL.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'NanumSquare';
+  font-weight: 800;
+  font-style: normal;
+  src: url('./font/NanumSquareEB.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'NanumSquare';
+  font-weight: 700;
+  font-style: normal;
+  src: url('./font/NanumSquareB.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'NanumSquare';
+  font-weight: 400;
+  font-style: italic;
+  src: url('./font/NanumSquareAcR.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'NanumSquare';
+  font-weight: 300;
+  font-style: italic;
+  src: url('./font/NanumSquareAcL.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'NanumSquare';
+  font-weight: 800;
+  font-style: italic;
+  src: url('./font/NanumSquareAcEB.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'NanumSquare';
+  font-weight: 700;
+  font-style: italic;
+  src: url('./font/NanumSquareAcB.ttf') format('truetype');
+}
+
+/* 일반 텍스트에 NanumSquare 폰트를 적용 */
 
 * {
-  font-family: "Pretendard Variable";
+  font-family: 'NanumSquare', sans-serif !important;
 }
-
+ 
 .start,
 .end,
 .start_onlyServer,
